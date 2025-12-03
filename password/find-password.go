@@ -55,27 +55,17 @@ func secondPuzzle(startingPosition int, lines []string) {
 		clicks = clicks % 100
 		nextPosition := position + clicks
 
-		if nextPosition < 0 {
-			if position != 0 {
-				password++
-			}
-			position = nextPosition + 100
+		if (nextPosition <= 0 || nextPosition > 99) && position != 0 {
+			password++
+		}
 
+		if nextPosition < 0 {
+			position = nextPosition + 100
 		} else if nextPosition > 99 {
-			if position != 0 {
-				password++
-			}
 			position = nextPosition % 100
-		} else if nextPosition == 0 {
-			if position != 0 {
-				password++
-			}
-			position = nextPosition
 		} else {
 			position = nextPosition
 		}
-
-		fmt.Println("Position ", position, "and password is ", password)
 	}
 
 	fmt.Println("The answer for the second puzzle is: ", password)
@@ -87,8 +77,6 @@ func readClicks(line string) int {
 	if err != nil {
 		panic(err)
 	}
-
-	//fmt.Println(direction, " -> ", numberOfClicks)
 
 	if direction == "R" {
 		return numberOfClicks

@@ -29,10 +29,10 @@ func firstPuzzle(input string) {
 		high, _ := strconv.Atoi(interval[1])
 
 		for i := low; i <= high; i++ {
-			s := strconv.Itoa(i)
-			if len(s)%2 == 0 {
-				firstHalf := s[:len(s)/2]
-				secondHalf := s[len(s)/2:]
+			stringNumber := strconv.Itoa(i)
+			if len(stringNumber)%2 == 0 {
+				firstHalf := stringNumber[:len(stringNumber)/2]
+				secondHalf := stringNumber[len(stringNumber)/2:]
 
 				if firstHalf == secondHalf {
 					fmt.Println(i)
@@ -48,9 +48,7 @@ func firstPuzzle(input string) {
 
 func secondPuzzle(input string) {
 
-	sum := 0
-
-	invalids := make(map[int]struct{})
+	answer := 0
 
 	for _, line := range strings.Split(input, ",") {
 		interval := strings.Split(line, "-")
@@ -59,28 +57,25 @@ func secondPuzzle(input string) {
 		high, _ := strconv.Atoi(interval[1])
 
 		for number := low; number <= high; number++ {
-			s := strconv.Itoa(number)
-			for size := 1; size < len(s)/2+1; size++ {
-				cutpoint := 0
-				set := make(map[string]struct{})
-				for cutpoint+size <= len(s) {
-					value := s[cutpoint : cutpoint+size]
-					set[value] = struct{}{}
-					cutpoint += size
+			stringNumber := strconv.Itoa(number)
+			for size := 1; size < len(stringNumber)/2+1; size++ {
+				cutPoint := 0
+				setOfPossibleSubStrings := make(map[string]struct{})
+
+				for cutPoint+size <= len(stringNumber) {
+					value := stringNumber[cutPoint : cutPoint+size]
+					setOfPossibleSubStrings[value] = struct{}{}
+					cutPoint += size
 				}
-				if cutpoint == len(s) && len(set) == 1 {
-					invalids[number] = struct{}{}
+
+				if cutPoint == len(stringNumber) && len(setOfPossibleSubStrings) == 1 {
+					answer += number
+					break
 				}
 			}
 		}
 	}
 
-	fmt.Println("the invalids are: ", invalids)
-
-	for item := range invalids {
-		sum += item
-	}
-
-	fmt.Println("The answer for the first puzzle is: ", sum)
+	fmt.Println("The answer for the first puzzle is: ", answer)
 
 }
