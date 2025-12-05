@@ -43,7 +43,6 @@ func main() {
 }
 
 func firstPuzzle(ranges []Range, ingredients []int) {
-
 	numberOfValidIngredients := 0
 	for _, ingredient := range ingredients {
 		for _, r := range ranges {
@@ -57,7 +56,6 @@ func firstPuzzle(ranges []Range, ingredients []int) {
 }
 
 func secondPuzzle(ranges []Range) {
-
 	sizeBeforeCleanup := len(ranges)
 	cleanedRanges := cleanOverlaps(ranges)
 
@@ -75,7 +73,6 @@ func secondPuzzle(ranges []Range) {
 }
 
 func cleanOverlaps(ranges []Range) []Range {
-
 	var cleaned []Range
 
 	for _, r := range ranges {
