@@ -3,6 +3,7 @@ package io
 import (
 	"bufio"
 	"os"
+	"strings"
 )
 
 func check(e error) {
@@ -29,4 +30,21 @@ func ReadFile(path string) ([]string, error) {
 	}
 
 	return lines, nil
+}
+
+func BuildGrid(input []string) [][]string {
+	rows := len(input)
+	cols := len(strings.Fields(input[0]))
+
+	grid := make([][]string, rows)
+	for i := range grid {
+		grid[i] = make([]string, cols)
+	}
+
+	for row, line := range input {
+		data := strings.Split(line, "")
+		grid[row] = data
+	}
+
+	return grid
 }
