@@ -11,14 +11,9 @@ import (
 )
 
 type Edge struct {
-	boxA     Box
-	boxB     Box
+	source   Box
+	target   Box
 	distance float64
-}
-
-type Vertice struct {
-	box   Box
-	edges []Edge
 }
 
 type Box struct {
@@ -28,7 +23,7 @@ type Box struct {
 }
 
 func main() {
-	input, err := io.ReadFile("./input/test.txt")
+	input, err := io.ReadFile("./input/input.txt")
 	if err != nil {
 		log.Fatalf("Error reading file: %v", err)
 	}
@@ -36,60 +31,88 @@ func main() {
 	boxes := buildBoxes(input)
 	sortedEdges := calculateDistances(boxes)
 
-	sort.Slice(sortedEdges, func(i, j int) bool {
-		return sortedEdges[i].distance < sortedEdges[j].distance
-	})
-
-	edges := sortedEdges[:10]
-	graph := make(map[string]Vertice)
-
-	for _, edge := range edges {
-		boxAString := boxToString(edge.boxA)
-		boxBString := boxToString(edge.boxB)
-		graph[boxAString] = Vertice{box: edge.boxA}
-		graph[boxBString] = Vertice{box: edge.boxB}
-	}
-
-	for _, edge := range edges {
-		boxAString := boxToString(edge.boxA)
-		boxBString := boxToString(edge.boxB)
-
-		if val, exists := graph[boxAString]; exists {
-			val.edges = append(val.edges, edge)
-			graph[boxAString] = val
-		}
-
-		if val, exists := graph[boxBString]; exists {
-			val.edges = append(val.edges, edge)
-			fmt.Println(val.edges)
-			graph[boxBString] = val
-		}
-	}
-
-	fmt.Println(graph)
-
-	seen := make(map[string]struct{})
-	var sizes []int
-	for _, vertice := range graph {
-		size := countSizeOfCircuit(vertice, graph, seen)
-		if size > 0 {
-			fmt.Println("Size: ", size)
-		}
-	}
-
-	fmt.Println("The answer for the first puzzle is: ", sizes)
+	firstPuzzle(sortedEdges[:1000], 3)
+	secondPuzzle(sortedEdges, len(boxes))
 
 }
 
-func countSizeOfCircuit(vertice Vertice, graph map[string]Vertice, seen map[string]struct{}) int {
-	if _, exists := seen[boxToString(vertice.box)]; exists {
+func firstPuzzle(edges []Edge, k int) {
+	seen := make(map[string]struct{})
+
+	sizes := buildGraphAndCountSizes(edges, seen)
+	sort.Sort(sort.Reverse(sort.IntSlice(sizes)))
+
+	answer := 1
+	for _, size := range sizes[:k] {
+		answer *= size
+	}
+
+	fmt.Println("The answer for the first puzzle is: ", answer)
+}
+
+func secondPuzzle(edges []Edge, numberOfBoxes int) {
+	pivot := numberOfBoxes / 2
+
+	seen := make(map[string]struct{})
+	size := buildGraphAndCountSizes(edges[:pivot], seen)
+
+	for len(size) == 1 {
+		seen = make(map[string]struct{})
+		pivot = pivot / 2
+		size = buildGraphAndCountSizes(edges[:pivot], seen)
+	}
+	for len(seen) < numberOfBoxes {
+		pivot++
+		size = buildGraphAndCountSizes(edges[:pivot], seen)
+	}
+
+	edge := edges[pivot-1]
+
+	fmt.Println("The answer for the second puzzle is: ", int(edge.source.x)*int(edge.target.x))
+}
+
+func buildGraphAndCountSizes(edges []Edge, seen map[string]struct{}) []int {
+
+	graph := make(map[string][]string)
+
+	for _, edge := range edges {
+
+		sourceId := boxToString(edge.source)
+		targetId := boxToString(edge.target)
+
+		if _, exists := graph[sourceId]; !exists {
+			graph[sourceId] = []string{}
+		}
+
+		if _, exists := graph[targetId]; !exists {
+			graph[targetId] = []string{}
+		}
+
+		graph[sourceId] = append(graph[sourceId], targetId)
+		graph[targetId] = append(graph[targetId], sourceId)
+
+	}
+
+	var sizes []int
+	for key, _ := range graph {
+		if _, exists := seen[key]; !exists {
+			size := countSizeOfCircuit(key, graph, seen)
+			sizes = append(sizes, size)
+		}
+	}
+
+	return sizes
+}
+
+func countSizeOfCircuit(key string, graph map[string][]string, seen map[string]struct{}) int {
+	if _, exists := seen[key]; exists {
 		return 0
 	}
 
-	seen[boxToString(vertice.box)] = struct{}{}
+	seen[key] = struct{}{}
 	size := 1
-	for _, edge := range vertice.edges {
-		size += countSizeOfCircuit(graph[boxToString(edge.boxA)], graph, seen)
+	for _, edge := range graph[key] {
+		size += countSizeOfCircuit(edge, graph, seen)
 	}
 
 	return size
@@ -104,9 +127,13 @@ func calculateDistances(boxes []Box) []Edge {
 		for j := i + 1; j < len(boxes); j++ {
 			boxB := boxes[j]
 			distance := math.Sqrt(math.Pow((boxA.x-boxB.x), 2) + math.Pow((boxA.y-boxB.y), 2) + math.Pow((boxA.z-boxB.z), 2))
-			distances = append(distances, Edge{boxA: boxA, boxB: boxB, distance: distance})
+			distances = append(distances, Edge{source: boxA, target: boxB, distance: distance})
 		}
 	}
+
+	sort.Slice(distances, func(i, j int) bool {
+		return distances[i].distance < distances[j].distance
+	})
 
 	return distances
 }
