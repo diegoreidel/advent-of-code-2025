@@ -39,77 +39,61 @@ func secondPuzzle(points []Point) {
 		}
 	}
 
-	var grid [][]string
-	for i := 0; i <= maxX; i++ {
-		line := make([]string, maxY+1)
-		for i, _ := range line {
-			line[i] = "."
-		}
-		grid = append(grid, line)
-	}
+	fmt.Println("The size is ", maxX, "x", maxY, "")
 
-	for _, point := range points {
-		grid[point.x][point.y] = "#"
-	}
-
-	for i := 0; i < len(points)-1; i++ {
-		buildLimits(points[i], points[i+1], grid)
-	}
-	buildLimits(points[0], points[len(points)-1], grid)
-	fillGreenTiles(grid)
-	writeGrid(grid)
+	//var grid [][]bool
+	//for i := 0; i <= maxX; i++ {
+	//	line := make([]bool, maxY+1)
+	//	grid = append(grid, line)
+	//}
+	//
+	//for _, point := range points {
+	//	grid[point.x][point.y] = true
+	//}
+	//
+	//for i := 0; i < len(points)-1; i++ {
+	//	buildLimits(points[i], points[i+1], grid)
+	//}
+	//buildLimits(points[0], points[len(points)-1], grid)
+	//writeGrid(grid)
 }
 
-func fillGreenTiles(grid [][]string) {
-
-	for i := 0; i < len(grid); i++ {
-		for j := 0; j < len(grid[i]); j++ {
-			for j < len(grid[i]) && grid[i][j] != "X" && grid[i][j] != "#" {
-				j++
-			}
-
-			j++
-
-			for j < len(grid[i]) && grid[i][j] == "." {
-				grid[i][j] = "X"
-				j++
-			}
-		}
-	}
-}
-
-func buildLimits(pointA Point, pointB Point, grid [][]string) {
+func buildLimits(pointA Point, pointB Point, grid [][]bool) {
 	if pointA.x == pointB.x {
 		aY := pointA.y
 		bY := pointB.y
 		for aY-1 > bY {
-			grid[pointA.x][aY-1] = "X"
+			grid[pointA.x][aY-1] = true
 			aY--
 		}
 
 		for bY-1 > aY {
-			grid[pointB.x][bY-1] = "X"
+			grid[pointB.x][bY-1] = true
 			bY--
 		}
 	} else {
 		aX := pointA.x
 		bX := pointB.x
 		for aX-1 > bX {
-			grid[aX-1][pointA.y] = "X"
+			grid[aX-1][pointA.y] = true
 			aX--
 		}
 
 		for bX-1 > aX {
-			grid[bX-1][pointB.y] = "X"
+			grid[bX-1][pointB.y] = true
 			bX--
 		}
 	}
 }
 
-func writeGrid(grid [][]string) {
+func writeGrid(grid [][]bool) {
 	for i := 0; i < len(grid); i++ {
 		for j := 0; j < len(grid[i]); j++ {
-			fmt.Print(grid[i][j])
+			if grid[i][j] {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
 		}
 		fmt.Println()
 	}
