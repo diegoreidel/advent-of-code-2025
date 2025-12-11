@@ -38,7 +38,7 @@ func firstPuzzle(machines []Machine) {
 	answer := 0
 	for i, machine := range machines {
 		seen := make(map[string]struct{})
-		minimal := dp(machine.goal, initialState(machine), machine.buttons, copyMap(seen), []Button{}, math.MaxInt/2, make(map[string]int))
+		minimal := dp(machine, initialState(machine), machine.buttons, copyMap(seen), []Button{}, math.MaxInt/2, make(map[string]int))
 		fmt.Println("For machine ", i+1, " the minimal cost is ", minimal)
 		answer += minimal
 	}
@@ -49,21 +49,31 @@ func firstPuzzle(machines []Machine) {
 func initialState(machine Machine) string {
 	initial := ""
 
-	for i := 0; i < len(machine.goal); i++ {
+	size := len( machine.goal)
+	if machine.joltage {
+		size = len(strings.Split(machine.goal, ","))
+	}
+
+	for i := 0; i < size - 1; i++ {
 		if machine.joltage {
-			initial += "0"
+			initial += "0,"
 		} else {
 			initial += "."
 		}
 	}
 
+	if machine.joltage {
+		initial += "0"
+	} else {
+		initial += "."
+	}
+
 	return initial
 }
 
-func dp(goal string, state string, buttons []Button, seen map[string]struct{}, pressed []Button, bestSoFar int, minimals map[string]int) int {
+func dp(machine Machine, state string, buttons []Button, seen map[string]struct{}, pressed []Button, bestSoFar int, minimals map[string]int) int {
 
-	if state == goal {
-		//fmt.Println(pressed)
+	if state == machine.goal {
 		return 0
 	}
 
@@ -84,11 +94,11 @@ func dp(goal string, state string, buttons []Button, seen map[string]struct{}, p
 	answer := math.MaxInt / 2
 
 	for _, button := range buttons {
-		newLights := changeLights(state, button.changes)
+		newLights := changeState(machine, state, button.changes)
 
 		copied := copyList(pressed)
 		copied = append(copied, button)
-		cost := dp(goal, newLights, buttons, copyMap(seen), copied, answer, minimals) + 1
+		cost := dp(machine, newLights, buttons, copyMap(seen), copied, answer, minimals) + 1
 		if cost < answer {
 			answer = cost
 		}
@@ -105,19 +115,46 @@ func copyList(pressed []Button) []Button {
 	return copied
 }
 
-func changeLights(lights string, changes []int) string {
+func anyJoltageSurpassed(machine Machine, current string) bool {
+	goal := strings.Split(machine.goal, ",")
+	state := strings.Split(current, ",")
 
-	runes := []rune(lights)
-	for _, change := range changes {
-		if runes[change] == '.' {
-			runes[change] = '#'
-		} else {
-			runes[change] = '.'
+	for i := 0; i < len(goal); i++ {
+		goalValue, _ := strconv.Atoi(goal[i])
+		stateValeu, _ := strconv.Atoi(state[i])
+
+		if stateValeu > goalValue {
+			return true
 		}
 	}
 
-	changed := string(runes)
-	return changed
+	return false
+}
+
+func changeState(machine Machine, state string, changes []int) string {
+
+	if !machine.joltage {
+		runes := []rune(state)
+		for _, change := range changes {
+			if runes[change] == '.' {
+				runes[change] = '#'
+			} else {
+				runes[change] = '.'
+			}
+		}
+
+		changed := string(runes)
+		return changed
+	} else {
+		parts := strings.Split(state, ",")
+		for _, change := range changes {
+			value, _ := strconv.Atoi(parts[change])
+			value++
+			parts[change] = strconv.Itoa(value)
+		}
+
+		return strings.Join(parts, ",")
+	}
 }
 
 func buildMachine(line string, useJoltage bool) Machine {
