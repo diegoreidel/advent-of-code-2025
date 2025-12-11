@@ -25,13 +25,65 @@ func main() {
 		log.Fatalf("Error reading file: %v", err)
 	}
 
-	var machines []Machine
+	var lights []Machine
 	for _, line := range input {
 		machine := buildMachine(line, false)
-		machines = append(machines, machine)
+		lights = append(lights, machine)
 	}
 
-	firstPuzzle(machines)
+	var joltage []Machine
+	for _, line := range input {
+		machine := buildMachine(line, true)
+		joltage = append(joltage, machine)
+	}
+
+	//firstPuzzle(lights)
+	secondPuzzle(joltage)
+}
+
+func secondPuzzle(machines []Machine) {
+	answer := 0
+
+	for i, machine := range machines {
+		this := second(machine, initialState(machine), make(map[string]int))
+		answer += this
+		fmt.Println("For machine ", i, " the minimal cost is ", this)
+	}
+
+	fmt.Println("The answer for the second puzzle is: ", answer)
+}
+
+func second(machine Machine, state string, costs map[string]int) int {
+	if machine.goal == state {
+		return 0
+	}
+
+	if anyJoltageSurpassed(machine, state) {
+		return math.MaxInt / 2
+	}
+
+	if val, exists := costs[state]; exists {
+		return val
+	}
+
+	var nextStates []string
+	for _, button := range machine.buttons {
+		newState := changeState(machine, state, button.changes)
+		nextStates = append(nextStates, newState)
+	}
+
+	minimal := math.MaxInt / 2
+	for _, nextState := range nextStates {
+		cost := second(machine, nextState, costs) + 1
+
+		if cost < minimal {
+			minimal = cost
+		}
+	}
+
+	costs[state] = minimal
+
+	return minimal
 }
 
 func firstPuzzle(machines []Machine) {
@@ -159,8 +211,13 @@ func changeState(machine Machine, state string, changes []int) string {
 
 func buildMachine(line string, useJoltage bool) Machine {
 	parts := strings.Split(line, " ")
-	lights := parts[0]
-	//joltage := parts[len(parts)-1]
+
+	var goal string
+	if !useJoltage {
+		goal = parts[0]
+	} else {
+		goal = parts[len(parts)-1]
+	}
 
 	var buttons []Button
 
@@ -179,7 +236,7 @@ func buildMachine(line string, useJoltage bool) Machine {
 		buttons = append(buttons, button)
 	}
 
-	return Machine{lights[1 : len(lights)-1], buttons, useJoltage}
+	return Machine{goal[1 : len(goal)-1], buttons, useJoltage}
 }
 
 func copyMap(original map[string]struct{}) map[string]struct{} {
