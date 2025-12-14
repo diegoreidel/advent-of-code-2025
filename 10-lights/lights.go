@@ -31,67 +31,14 @@ func main() {
 		lights = append(lights, machine)
 	}
 
-	var joltage []Machine
-	for _, line := range input {
-		machine := buildMachine(line, true)
-		joltage = append(joltage, machine)
-	}
-
-	//firstPuzzle(lights)
-	secondPuzzle(joltage)
-}
-
-func secondPuzzle(machines []Machine) {
-	answer := 0
-
-	for i, machine := range machines {
-		this := second(machine, initialState(machine), make(map[string]int))
-		answer += this
-		fmt.Println("For machine ", i, " the minimal cost is ", this)
-	}
-
-	fmt.Println("The answer for the second puzzle is: ", answer)
-}
-
-func second(machine Machine, state string, costs map[string]int) int {
-	if machine.goal == state {
-		return 0
-	}
-
-	if anyJoltageSurpassed(machine, state) {
-		return math.MaxInt / 2
-	}
-
-	if val, exists := costs[state]; exists {
-		return val
-	}
-
-	var nextStates []string
-	for _, button := range machine.buttons {
-		newState := changeState(machine, state, button.changes)
-		nextStates = append(nextStates, newState)
-	}
-
-	minimal := math.MaxInt / 2
-	for _, nextState := range nextStates {
-		cost := second(machine, nextState, costs) + 1
-
-		if cost < minimal {
-			minimal = cost
-		}
-	}
-
-	costs[state] = minimal
-
-	return minimal
+	firstPuzzle(lights)
 }
 
 func firstPuzzle(machines []Machine) {
 	answer := 0
-	for i, machine := range machines {
+	for _, machine := range machines {
 		seen := make(map[string]struct{})
 		minimal := dp(machine, initialState(machine), machine.buttons, copyMap(seen), []Button{}, math.MaxInt/2, make(map[string]int))
-		fmt.Println("For machine ", i+1, " the minimal cost is ", minimal)
 		answer += minimal
 	}
 
@@ -165,22 +112,6 @@ func copyList(pressed []Button) []Button {
 	copied := make([]Button, len(pressed))
 	copy(copied, pressed)
 	return copied
-}
-
-func anyJoltageSurpassed(machine Machine, current string) bool {
-	goal := strings.Split(machine.goal, ",")
-	state := strings.Split(current, ",")
-
-	for i := 0; i < len(goal); i++ {
-		goalValue, _ := strconv.Atoi(goal[i])
-		stateValeu, _ := strconv.Atoi(state[i])
-
-		if stateValeu > goalValue {
-			return true
-		}
-	}
-
-	return false
 }
 
 func changeState(machine Machine, state string, changes []int) string {
